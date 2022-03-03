@@ -85,6 +85,13 @@ InvSbox = (
 ### value to compute Rijndael values ###
 xtime = lambda a: (((a << 1) ^ 0x1B) & 0xFF) if (a & 0x80) else (a << 1)
 
+
+def sub_bytes(s):
+    for i in range(4):
+        for j in range(4):
+            s[i][j] = Sbox[s[i][j]]
+
+
 ### bytes to matrix old fashion way ###
 def array2matrix(array):
     #array to matrix 4x4 sorted by columns
@@ -112,7 +119,6 @@ def printmatrix(matrix):
 
 ###  bytes to matrix fancy way ###
 def bytes2matrix(text):
-    """ Converts a 16-byte array into a 4x4 matrix.  """
     return [list(text[i:i+4]) for i in range(0, len(text), 4)]
 
 ### divide in tow values the byte ==> high,low=bytes_div(integer) ###
@@ -177,6 +183,11 @@ print("\n")
 print("\n")
 print("\n")
 mix_columns(matrix)
+printmatrix(matrix)
+print("\n")
+print("\n")
+print("\n")
+sub_bytes(matrix)
 printmatrix(matrix)
 
 
