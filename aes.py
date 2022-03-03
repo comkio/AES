@@ -82,6 +82,14 @@ InvSbox = (
     0x17, 0x2B, 0x04, 0x7E, 0xBA, 0x77, 0xD6, 0x26, 0xE1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0C, 0x7D,
 )
 
+
+Rcon = (
+    0x00, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40,
+    0x80, 0x1B, 0x36, 0x6C, 0xD8, 0xAB, 0x4D, 0x9A,
+    0x2F, 0x5E, 0xBC, 0x63, 0xC6, 0x97, 0x35, 0x6A,
+    0xD4, 0xB3, 0x7D, 0xFA, 0xEF, 0xC5, 0x91, 0x39,
+)
+
 ### value to compute Rijndael values ###
 xtime = lambda a: (((a << 1) ^ 0x1B) & 0xFF) if (a & 0x80) else (a << 1)
 
@@ -94,7 +102,7 @@ def sub_bytes(s):
 
 ### bytes to matrix old fashion way ###
 def array2matrix(array):
-    #array to matrix 4x4 sorted by columns
+    #array to matrix 4x4 sorted by rows
     matrix = [[0,0,0,0],
             [0,0,0,0],
             [0,0,0,0],
@@ -159,7 +167,42 @@ def mix_columns(a):
     for i in range(4):
         mix_single_column_comp(a[i])
 
+### rotation ###
 
+
+### change masterkey ###
+def change_key(master_key):
+
+    keyrot = array2matrix(master_key)
+    master_key = array2matrix(master_key)
+
+    printmatrix(keyrot)
+    print("\n")
+    for i in range(4):
+        for j in range(4):
+            keyrot[i][j] = master_key[i][j-3]
+
+    for i in range(4):
+        for j in range(4):
+            keyrot[i][j] = Sbox[keyrot[i][j]]
+    
+    printmatrix(keyrot)
+
+    
+
+
+
+###TESTING###
+
+key=""
+key= '{0:*>16}'.format(key)
+key="El pepito grillo"
+keyarray = bytes(key, 'ascii')
+print("size of key:",len(keyarray))
+print(keyarray)
+for i in range(len(keyarray)):
+    print(hex(keyarray[i]), end=' ')
+print("\n")
 string = "hola que la pasa"
 array = bytes(string, 'ascii')
 length = len(array)
@@ -189,7 +232,10 @@ print("\n")
 print("\n")
 sub_bytes(matrix)
 printmatrix(matrix)
-
+print("\n")
+print("\n")
+print("\n")
+change_key(keyarray)
 
 
 
@@ -201,12 +247,11 @@ class AES:
         """
         Objecti initialitzation with a given key master_key
         """
-        self.change_key(master_key)
+        
+   
 
     
-    def change_key(self, master_key):
-        self.round_keys = array2matrix(master_key)
-        # print self.round_keys
+
         
     
 
