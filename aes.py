@@ -5,8 +5,11 @@ AES algorithm 128 bits
 '''''''''
 
 
+from doctest import master
 import numpy as np
 from tempfile import tempdir
+
+np.set_printoptions(formatter={'int':hex})
 
 
 table_2 = (
@@ -135,9 +138,9 @@ def array2matrix(array):
 
 ### print matrix ###
 def printmatrix(matrix):
-    for i in range(4):
+    for i in range(len(matrix)):
         print("\n")
-        for j in range(4):
+        for j in range(len(matrix)):
             print(hex(matrix[i][j]), end=' ')
 
 ###  bytes to matrix fancy way ###
@@ -184,9 +187,12 @@ def mix_columns(a):
 
 ### rotation ###
 def rotation(word):
-    temp = word
-    for i in range(1,4):
-        word[i-1] = temp[i]
+    temporary = []
+    temporary = np.append(temporary,word)
+    temporary = temporary.astype(int)
+    for i in range(0,3):
+        word[i] = temporary[i+1]
+    word[3] = temporary[0]
         
 
 ### change masterkey ###
@@ -210,29 +216,103 @@ def change_key(master_key):
     Nr = 10
     Nk = 4
     print("tamany:",len(master_key))
-    master_key = array2matrix(master_key)
     
-    print(master_key)
+
+    np_key = np.zeros((4,4))
+    print("NP",np_key)
+    master_key = array2matrix(master_key)
+    printmatrix(master_key)
+   
 
     temp = [ [ 0 for i in range(4) ] for j in range(4*11) ]
     np_temp = np.array( [ 0 for i in range(4) ])
 
     c = np.zeros((11,4,4))
-    print(c)
-    round_keys = []
-    round_keys.append(master_key)
-    """"
-    for i in range(4,4*11):
-        temp = master_key[i-1]
-        print(temp)
-        if i % 4 == 0:
-            rotation(temp)
-            temp[i] = Sbox[temp[i]] ^ Rcon[int(i / 4)]  
-            round_keys[i].append(temp[i-1])
-            
-        print(master_key)
-
+    
+    #temporary = np.append(master_key,[master_key[2]],axis=0)
+    #print("NP",temporary)
+    
+    
+    tempcol = np.array([0,0,0,0])
+    tempkey = np.zeros((4,4))
+    tempkey = tempkey.astype(int)
+    round_keys = np.array(master_key)
+    counter = 1
+    print("Round",round_keys)
+    
     """
+    for row in range(4):
+        rotation(round_keys[row])
+
+    
+    print("Round",round_keys)       
+    for i in range(4,4*11):
+        for col in range (4):
+            #print("col",col)  
+            temporal = Sbox[round_keys[col][3]] ^ Rcon[int(col/4)]
+            #print(temporal)
+            tempcol[col] = [temporal]
+            #print("tempcol",tempcol)  
+        
+        round_keys = np.append(round_keys,tempcol,axis=1)
+    """ 
+
+   
+        
+
+    print("Round\n",round_keys)       
+    for col in range(4,4*11):
+        if(col % 4 == 0):
+            temp = np.array(round_keys[col-1])
+            rotation(temp)
+            print("ROTAO",round_keys)
+            rcon = col
+            for row in range(4):
+                temporal = Sbox[temp[row]]
+                print("tempcol",hex(temporal))
+                temporal = temporal ^ Rcon[int(rcon/4)]
+                rcon = rcon -1
+                print("tempcol",hex(temporal))
+                tempcol[row] = round_keys[0][row] ^ temporal
+ 
+            print("tempcol",tempcol)
+            round_keys = np.append(round_keys,[tempcol],axis=0)
+            print("Round Keys!\n",round_keys)
+            print("This is round: ", counter)
+            for i in range(col-4,col):
+                count=0
+                for j in range(4):
+                    tempkey[count][j] = round_keys[i][j]
+                    count = count+1
+            print("Tempkey\n",tempkey)
+            printmatrix(tempkey)
+            counter = counter +1 
+        else:
+            for row in range(4):
+                temporal = round_keys[col-4][row] ^ round_keys[col-1][row]
+                tempcol[row] = temporal
+            round_keys = np.append(round_keys,[tempcol],axis=0)
+
+
+    printmatrix(round_keys)
+
+
+    for i in range(4,4*11):
+        temp = []
+        temp = np.append(temp,master_key[i-1],axis=0)
+        temp = temp.astype(int)
+        #temp = master_key[i-1]
+        #if i % 4 == 0:
+        rotation(temp)
+        print("\ntemp2",temp)
+        print("temp2",temp[0])
+        print("Print i",i)
+        temp[i] = Sbox[temp[[i]]] ^ Rcon[int(i / 4)]  
+        round_keys = np.append(master_key,[temp],axis=0)
+            
+        print("Round_keys",round_keys)
+
+    
 
     keySchedule = [ [ 0 for i in range(4) ] for j in range(4*11) ]
    
@@ -268,7 +348,7 @@ def change_key(master_key):
 
 key=""
 key= '{0:*>16}'.format(key)
-key="El pepito grillo"
+key="Thats my Kung Fu"
 keyarray = bytes(key, 'ascii')
 print("size of key:",len(keyarray))
 print(keyarray)
