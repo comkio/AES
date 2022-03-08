@@ -195,23 +195,8 @@ def rotation(word):
     word[3] = temporary[0]
         
 
-### change masterkey ###
+### Key expansion finished ###
 def change_key(master_key):
-    """
-    keyrot = array2matrix(master_key)
-    master_key = array2matrix(master_key)
-
-    printmatrix(keyrot)
-    print("\n")
-    for i in range(4):
-        for j in range(4):
-            keyrot[i][j] = master_key[i][j-3]
-
-    for i in range(4):
-        for j in range(4):
-            keyrot[i][j] = Sbox[keyrot[i][j]]
-    """
-
     Nb = 4
     Nr = 10
     Nk = 4
@@ -225,12 +210,6 @@ def change_key(master_key):
    
 
     temp = [ [ 0 for i in range(4) ] for j in range(4*11) ]
-    np_temp = np.array( [ 0 for i in range(4) ])
-
-    c = np.zeros((11,4,4))
-    
-    #temporary = np.append(master_key,[master_key[2]],axis=0)
-    #print("NP",temporary)
     
     
     tempcol = np.array([0,0,0,0])
@@ -238,110 +217,63 @@ def change_key(master_key):
     tempkey = tempkey.astype(int)
     round_keys = np.array(master_key)
     counter = 1
-    print("Round",round_keys)
     
-    """
-    for row in range(4):
-        rotation(round_keys[row])
-
-    
-    print("Round",round_keys)       
-    for i in range(4,4*11):
-        for col in range (4):
-            #print("col",col)  
-            temporal = Sbox[round_keys[col][3]] ^ Rcon[int(col/4)]
-            #print(temporal)
-            tempcol[col] = [temporal]
-            #print("tempcol",tempcol)  
-        
-        round_keys = np.append(round_keys,tempcol,axis=1)
-    """ 
-
-   
+    i=0
         
 
-    print("Round\n",round_keys)       
+    print("Round 0\n",round_keys)       
     for col in range(4,4*11):
         if(col % 4 == 0):
+
             temp = np.array(round_keys[col-1])
             rotation(temp)
-            print("ROTAO",round_keys)
-            rcon = col
+            
             for row in range(4):
-                temporal = Sbox[temp[row]]
-                print("tempcol",hex(temporal))
-                temporal = temporal ^ Rcon[int(rcon/4)]
-                rcon = rcon -1
-                print("tempcol",hex(temporal))
-                tempcol[row] = round_keys[0][row] ^ temporal
- 
-            print("tempcol",tempcol)
+                temporal1 = Sbox[temp[row]]
+
+                if row < 1:
+                    temporal1 = temporal1 ^ Rcon[int(col/4)]
+                
+                tempcol[row] = round_keys[col-4][row] ^ temporal1
+   
             round_keys = np.append(round_keys,[tempcol],axis=0)
-            print("Round Keys!\n",round_keys)
+            
             print("This is round: ", counter)
             for i in range(col-4,col):
                 count=0
                 for j in range(4):
                     tempkey[count][j] = round_keys[i][j]
                     count = count+1
-            print("Tempkey\n",tempkey)
-            printmatrix(tempkey)
+                    
             counter = counter +1 
         else:
             for row in range(4):
-                temporal = round_keys[col-4][row] ^ round_keys[col-1][row]
-                tempcol[row] = temporal
+                temporal2 = round_keys[col-4][row] ^ round_keys[col-1][row]
+                tempcol[row] = temporal2
             round_keys = np.append(round_keys,[tempcol],axis=0)
 
+    print("Round Keys!\n",round_keys)
 
-    printmatrix(round_keys)
-
-
-    for i in range(4,4*11):
-        temp = []
-        temp = np.append(temp,master_key[i-1],axis=0)
-        temp = temp.astype(int)
-        #temp = master_key[i-1]
-        #if i % 4 == 0:
-        rotation(temp)
-        print("\ntemp2",temp)
-        print("temp2",temp[0])
-        print("Print i",i)
-        temp[i] = Sbox[temp[[i]]] ^ Rcon[int(i / 4)]  
-        round_keys = np.append(master_key,[temp],axis=0)
-            
-        print("Round_keys",round_keys)
-
-    
-
-    keySchedule = [ [ 0 for i in range(4) ] for j in range(4*11) ]
-   
-
-    print("Matrix init: ",keySchedule)
-    for i in range(4):
-        for j in range(4):
-            keySchedule[i][j] = master_key[i][j]
-    
-
-    
-
-    for i in range(Nb, Nb *(Nr +1)):
-        if i % 4 ==0:
-            keyfill = keySchedule[i-Nk][0] ^ Sbox[keySchedule[i-1][1]] ^ Rcon[int(i / 4)]
-            keySchedule.append(keyfill)
-        
-            for j in range(1,Nk):
-                keyfill = keySchedule[i-Nk][j] ^ Sbox[keySchedule[i-1][(j+1) % 4]] 
-                keySchedule.append(keyfill)
-        else:
-            for j in range(Nk):
-                keyfill = keySchedule[i-Nk][j] ^ keySchedule[i-1][j]
-                keySchedule.append(keyfill)
-
-    print(keySchedule)
-
+    return round_keys
   
 
+def encrypt(plaintext):
+
+    plain_state = bytes2matrix(plaintext)
+
+    printmatrix(plain_state)
+    #round_keys = change_key(plain_state)
+
+    state_matrix = np.array(plain_state)
+    
+    for j in range(4):
+        for i in range(4): 
+            state_matrix[i][j] = plain_state[j][i]
+    
+    print("\n",state_matrix)
+    
+
+    
 
 
 ###TESTING###
@@ -367,7 +299,7 @@ print("\n")
 
 matrix = array2matrix(array) 
 
-print(matrix)
+#print(matrix)
 
 #print("TEXT to Matrix: ",text2matrix(string))
 
@@ -392,10 +324,18 @@ print("\n")
 plain = 0x3243f6a8885a308d313198a2e0370734
 print("text to matrix:",text2matrix(plain))
 change_key(keyarray)
-printmatrix(matrix)
+#sprintmatrix(matrix)
+encrypt(keyarray)
 
 
+statematrix = np.zeros((4,4))
+statematrix = statematrix.astype(int)
 
+for i in range(4):
+    for j in range(4):
+        statematrix[j][i] = keyarray[i+4*j]
+
+print("last print\n",statematrix)
 
 
 class AES:
