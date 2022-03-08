@@ -193,6 +193,19 @@ def rotation(word):
     for i in range(0,3):
         word[i] = temporary[i+1]
     word[3] = temporary[0]
+
+def xorBytes(matrixA,matrixB):
+    for i in range(4):
+        for j in range(4):
+            matrixA[i][j] ^= matrixB[i][j]
+
+def invMatrix(matrix):
+    matrixtemp = np.array(matrix)
+    for i in range(4):
+        for j in range(4): 
+            matrix[j][i] = matrixtemp[i][j]
+
+
         
 
 ### Key expansion finished ###
@@ -257,21 +270,54 @@ def change_key(master_key):
     return round_keys
   
 
-def encrypt(plaintext):
+def encrypt(plaintext,masterkey):
 
     plain_state = bytes2matrix(plaintext)
 
+    
     printmatrix(plain_state)
     #round_keys = change_key(plain_state)
 
     state_matrix = np.array(plain_state)
+
     
-    for j in range(4):
-        for i in range(4): 
-            state_matrix[i][j] = plain_state[j][i]
+    invMatrix(state_matrix)
     
-    print("\n",state_matrix)
+    print("First Matrix\n",state_matrix)
+
+    round_keys = change_key(masterkey)
+
+    round_keys_temp = round_keys[:4]
     
+    print("Round key temp\n",round_keys_temp)
+    
+    invMatrix(round_keys_temp)
+
+    xorBytes(state_matrix,round_keys_temp)
+
+    print("INPUT ROUNDS\n",state_matrix)
+    for i in range(1,10):
+        sub_bytes(state_matrix)
+        print("subs bytes: \n",state_matrix)
+        shift_rows(state_matrix)
+        print("shifted rows: \n",state_matrix)
+        mix_columns(state_matrix)
+        print("mixed columns: \n",state_matrix)
+        matrixtemp = np.array(round_keys[4 * i : 4 * (i + 1)])
+        invMatrix(matrixtemp)
+        xorBytes(state_matrix,matrixtemp)
+        print("Print Substates: \n",state_matrix)
+        print("ROUND: ",i)
+        print("Substitute matrix\n",state_matrix)
+    
+    
+
+        
+
+
+    
+
+
 
     
 
@@ -287,7 +333,7 @@ print(keyarray)
 for i in range(len(keyarray)):
     print(hex(keyarray[i]), end=' ')
 print("\n")
-string = "hola que la pasa"
+string = "Two One Nine Two"
 array = bytes(string, 'ascii')
 length = len(array)
 string2 = b'hola que la pasa'
@@ -325,7 +371,7 @@ plain = 0x3243f6a8885a308d313198a2e0370734
 print("text to matrix:",text2matrix(plain))
 change_key(keyarray)
 #sprintmatrix(matrix)
-encrypt(keyarray)
+encrypt(array, keyarray)
 
 
 statematrix = np.zeros((4,4))
@@ -335,7 +381,7 @@ for i in range(4):
     for j in range(4):
         statematrix[j][i] = keyarray[i+4*j]
 
-print("last print\n",statematrix)
+
 
 
 class AES:
