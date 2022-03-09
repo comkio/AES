@@ -333,17 +333,29 @@ def invMatrix(matrix):
 
 def inv_mix_columns_com(s):
         # see Sec 4.1.3 in The Design of Rijndael
-        invMatrix(s)
-        for i in range(4):
+        #invMatrix(s)
+    print("inverse columns",s)
+    invMatrix(s)
+    for i in range(4):
+        u = xtime(xtime(s[i][0] ^ s[i][2]))
+        v = xtime(xtime(s[i][1] ^ s[i][3]))
+        s[i][0] ^= u
+        s[i][1] ^= v
+        s[i][2] ^= u
+        s[i][3] ^= v
+    invMatrix(s)     
+    mix_columns(s)
+
+def inv_mix_columns_com_test(s):
+    for i in range(4):
             u = xtime(xtime(s[i][0] ^ s[i][2]))
             v = xtime(xtime(s[i][1] ^ s[i][3]))
             s[i][0] ^= u
             s[i][1] ^= v
             s[i][2] ^= u
             s[i][3] ^= v
-        invMatrix(s)
-        mix_columns(s)
-        
+            
+    mix_columns(s)       
 
 ### Key expansion finished ###
 def change_key(master_key):
@@ -478,9 +490,11 @@ def decrypt(ciphertext,round_keys):
             print(matrixtemp)
             ciphertext = xorBytes(ciphertext,matrixtemp)
             print(ciphertext)
+            invMatrix(ciphertext)
             inv_shift_rows(ciphertext)
+            invMatrix(ciphertext)
             print(ciphertext)
-            sub_bytes(ciphertext)
+            inv_sub_bytes(ciphertext)
             print(ciphertext)
 
         else:    
@@ -490,16 +504,23 @@ def decrypt(ciphertext,round_keys):
             print("Pre xor\n",ciphertext)
             ciphertext = xorBytes(ciphertext,matrixtemp)
             print("After xor\n",ciphertext)
+            #invMatrix(ciphertext)
             inv_mix_columns_com(ciphertext)
             print("after col\n",ciphertext)
-            
+            invMatrix(ciphertext)
             inv_shift_rows(ciphertext)
+            invMatrix(ciphertext)
             print("after rows\n",ciphertext)
             inv_sub_bytes(ciphertext)
             print("after sub_bytes\n",ciphertext)
 
     matrixtemp = np.array(round_keys[:4])
-    
+    invMatrix(ciphertext)
+    inv_shift_rows(ciphertext)
+    invMatrix(ciphertext)
+    print("after rows\n",ciphertext)
+    inv_sub_bytes(ciphertext)
+    print("after sub_bytes\n",ciphertext)
     #invMatrix(matrixtemp)
     print(matrixtemp)
     ciphertext = xorBytes(ciphertext,matrixtemp)
