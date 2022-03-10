@@ -254,10 +254,11 @@ def shift_rows(s):
 
 ### Inverse Shift rows function ###
 def inv_shift_rows(s):
+    invMatrix(s)
     s[0][1], s[1][1], s[2][1], s[3][1] = s[3][1], s[0][1], s[1][1], s[2][1]
     s[0][2], s[1][2], s[2][2], s[3][2] = s[2][2], s[3][2], s[0][2], s[1][2]
     s[0][3], s[1][3], s[2][3], s[3][3] = s[1][3], s[2][3], s[3][3], s[0][3]
-
+    invMatrix(s)
 
 ### mix a single column computationally###
 def mix_single_column_comp(a):
@@ -293,7 +294,7 @@ def inv_mix_single_column(a):
 ### mix columns using Rijndael precalc-values###
 def mix_columns(a):
     invMatrix(a)
-    print(a)
+    
     for i in range(4):
         mix_single_column_comp(a[i])
     invMatrix(a) 
@@ -334,7 +335,6 @@ def invMatrix(matrix):
 def inv_mix_columns_com(s):
         # see Sec 4.1.3 in The Design of Rijndael
         #invMatrix(s)
-    print("inverse columns",s)
     invMatrix(s)
     for i in range(4):
         u = xtime(xtime(s[i][0] ^ s[i][2]))
@@ -355,7 +355,16 @@ def inv_mix_columns_com_test(s):
             s[i][2] ^= u
             s[i][3] ^= v
             
-    mix_columns(s)       
+    mix_columns(s)    
+
+def order_change_key(round_keys):
+
+    for i in range(11):
+        matrixtemp = np.array(round_keys[4 * i : 4 * (i + 1)])
+        invMatrix(matrixtemp)
+        round_keys[4 * i : 4 * (i + 1)] = matrixtemp
+
+    return round_keys
 
 ### Key expansion finished ###
 def change_key(master_key):
@@ -396,7 +405,7 @@ def change_key(master_key):
                     temporal1 = temporal1 ^ Rcon[int(col/4)]
                 
                 tempcol[row] = round_keys[col-4][row] ^ temporal1
-   
+            
             round_keys = np.append(round_keys,[tempcol],axis=0)
             
             print("This is round: ", counter)
@@ -411,7 +420,12 @@ def change_key(master_key):
             for row in range(4):
                 temporal2 = round_keys[col-4][row] ^ round_keys[col-1][row]
                 tempcol[row] = temporal2
+                
             round_keys = np.append(round_keys,[tempcol],axis=0)
+
+    print("Round Keys!\n",round_keys)
+
+    round_keys = order_change_key(round_keys)
 
     print("Round Keys!\n",round_keys)
 
@@ -439,7 +453,7 @@ def encrypt(plaintext,masterkey):
     
     print("Round key temp\n",round_keys_temp)
     
-    invMatrix(round_keys_temp)
+    #invMatrix(round_keys_temp)
 
     state_matrix = xorBytes(state_matrix,round_keys_temp)
 
@@ -454,7 +468,7 @@ def encrypt(plaintext,masterkey):
             print("shifted rows: \n",state_matrix)
             mix_columns(state_matrix)
             print("mixed columns: \n",state_matrix)
-            invMatrix(matrixtemp)
+            #invMatrix(matrixtemp)
             state_matrix = xorBytes(state_matrix,matrixtemp)
             print("Print Substates: \n",state_matrix)
             print("ROUND: ",i)
@@ -464,7 +478,7 @@ def encrypt(plaintext,masterkey):
             print("LAST ROUND: ",i)
             sub_bytes(state_matrix)
             shift_rows(state_matrix)
-            invMatrix(matrixtemp)
+            #invMatrix(matrixtemp)
             state_matrix = xorBytes(state_matrix,matrixtemp)
 
 
@@ -477,51 +491,36 @@ def encrypt(plaintext,masterkey):
 
 def decrypt(ciphertext,round_keys):
 
-
+    print("\nDECRYPT ROUND KEEYSSS SHOOOOOW MEEEE", round_keys,"\n")
     #ciphertext = np.array(ciphertext)
 
-    for i in range(10, 0, -1):
+    ciphertext = xorBytes(ciphertext,round_keys[40:])
+    for i in range(9, 0, -1):
 
         matrixtemp = np.array(round_keys[4 * i : 4 * (i + 1)])
-        if i > 9:
-            print("\nBUCLE DECRYPT ROUND", i,"\n")
-            print(ciphertext)
-            invMatrix(matrixtemp)
-            print(matrixtemp)
-            ciphertext = xorBytes(ciphertext,matrixtemp)
-            print(ciphertext)
-            invMatrix(ciphertext)
-            inv_shift_rows(ciphertext)
-            invMatrix(ciphertext)
-            print(ciphertext)
-            inv_sub_bytes(ciphertext)
-            print(ciphertext)
 
-        else:    
-            print("\nBUCLE DECRYPT ROUND", i,"\n")
-            invMatrix(matrixtemp)
-            print(matrixtemp)
-            print("Pre xor\n",ciphertext)
-            ciphertext = xorBytes(ciphertext,matrixtemp)
-            print("After xor\n",ciphertext)
-            #invMatrix(ciphertext)
-            inv_mix_columns_com(ciphertext)
-            print("after col\n",ciphertext)
-            invMatrix(ciphertext)
-            inv_shift_rows(ciphertext)
-            invMatrix(ciphertext)
-            print("after rows\n",ciphertext)
-            inv_sub_bytes(ciphertext)
-            print("after sub_bytes\n",ciphertext)
+        print("\nBUCLE DECRYPT ROUND", i,"\n")
+        inv_shift_rows(ciphertext)
+        print("after rows\n",ciphertext)
+        inv_sub_bytes(ciphertext)
+        print("after sub_bytes\n",ciphertext)
+        print("Pre xor\n",ciphertext)
+        print("MAtrix temp :)",matrixtemp)
+        ciphertext = xorBytes(ciphertext,matrixtemp)
+        print("After xor\n",ciphertext)
+        inv_mix_columns_com(ciphertext)
+        print("after col\n",ciphertext)
+        
+        
+        
 
     matrixtemp = np.array(round_keys[:4])
-    invMatrix(ciphertext)
+    
+    
     inv_shift_rows(ciphertext)
-    invMatrix(ciphertext)
     print("after rows\n",ciphertext)
     inv_sub_bytes(ciphertext)
     print("after sub_bytes\n",ciphertext)
-    #invMatrix(matrixtemp)
     print(matrixtemp)
     ciphertext = xorBytes(ciphertext,matrixtemp)
     
