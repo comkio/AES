@@ -526,7 +526,9 @@ def decrypt(ciphertext,round_keys):
     
     desencriptat = ciphertext
 
-    print("DECRYPTED\n",desencriptat)   
+    print("DECRYPTED\n",desencriptat)
+    desencriptat = desencriptat.astype('U13')
+
 
     
 
