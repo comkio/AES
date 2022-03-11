@@ -508,18 +508,6 @@ def decrypt(ciphertext,round_keys):
 
     print("\nDecrypted message:",plaintext)
 
-
-
-    
-
-
-    
-
-
-
-    
-
-
 ###TESTING###
 
 key=""
@@ -537,25 +525,10 @@ string2 = b'hola que la pasa'
 
 matrix = array2matrix(array) 
 
-#print(matrix)
-
-#print("TEXT to Matrix: ",text2matrix(string))
-
 
 plain = 0x3243f6a8885a308d313198a2e0370734
 change_key(keyarray)
-#sprintmatrix(matrix)
 encrypt(array, keyarray)
-
-
-statematrix = np.zeros((4,4))
-statematrix = statematrix.astype(int)
-
-for i in range(4):
-    for j in range(4):
-        statematrix[j][i] = keyarray[i+4*j]
-
-
 
 
 class AES:
