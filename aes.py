@@ -299,6 +299,7 @@ def mix_columns(a):
         mix_single_column_comp(a[i])
     invMatrix(a) 
 
+### matrix row to column ###
 def matrixRow2Col(matrix):
     tempmatrix = np.zeros((4,4))
     tempmatrix = matrix
@@ -316,6 +317,8 @@ def rotation(word):
         word[i] = temporary[i+1]
     word[3] = temporary[0]
 
+
+### XoR of two matrixs ###
 def xorBytes(matrixA,matrixB):
     matrixtemp = np.array(matrix)
 
@@ -326,15 +329,18 @@ def xorBytes(matrixA,matrixB):
     
     return matrixtemp
 
+### inverse matrix, e,g. columns to rows, rows to columns ### 
 def invMatrix(matrix):
     matrixtemp = np.array(matrix)
     for i in range(4):
         for j in range(4): 
             matrix[j][i] = matrixtemp[i][j]
 
+
+### Inverse of mix columns computationally ###
 def inv_mix_columns_com(s):
-        # see Sec 4.1.3 in The Design of Rijndael
-        #invMatrix(s)
+    # see Sec 4.1.3 in The Design of Rijndael
+    
     invMatrix(s)
     for i in range(4):
         u = xtime(xtime(s[i][0] ^ s[i][2]))
@@ -346,6 +352,7 @@ def inv_mix_columns_com(s):
     invMatrix(s)     
     mix_columns(s)
 
+### inverse function of mix columns ###s
 def inv_mix_columns_com_test(s):
     for i in range(4):
             u = xtime(xtime(s[i][0] ^ s[i][2]))
@@ -357,6 +364,7 @@ def inv_mix_columns_com_test(s):
             
     mix_columns(s)    
 
+### Function to put order keys in a correct order ###
 def order_change_key(round_keys):
 
     for i in range(11):
@@ -366,6 +374,7 @@ def order_change_key(round_keys):
 
     return round_keys
 
+### Byte matrix to string function ###
 def bytematrix2string(textmatrix):
     finalstring = ""
     tempstring=""
@@ -382,23 +391,16 @@ def change_key(master_key):
     Nr = 10
     Nk = 4
     
-
     np_key = np.zeros((4,4))
     
     master_key = array2matrix(master_key)
-    
-   
-
+  
     temp = [ [ 0 for i in range(4) ] for j in range(4*11) ]
-    
     
     tempcol = np.array([0,0,0,0])
     tempkey = np.zeros((4,4))
     tempkey = tempkey.astype(int)
     round_keys = np.array(master_key)
-    counter = 1
-    
-    i=0
              
     for col in range(4,4*11):
         if(col % 4 == 0):
@@ -416,13 +418,6 @@ def change_key(master_key):
             
             round_keys = np.append(round_keys,[tempcol],axis=0)
             
-            for i in range(col-4,col):
-                count=0
-                for j in range(4):
-                    tempkey[count][j] = round_keys[i][j]
-                    count = count+1
-                    
-            counter = counter +1 
         else:
             for row in range(4):
                 temporal2 = round_keys[col-4][row] ^ round_keys[col-1][row]
@@ -430,18 +425,14 @@ def change_key(master_key):
                 
             round_keys = np.append(round_keys,[tempcol],axis=0)
 
-    
-
     round_keys = order_change_key(round_keys)
 
     return round_keys
   
-
+### Encrypt function ###
 def encrypt(plaintext,masterkey):
 
     plain_state = bytes2matrix(plaintext)
-
-    #round_keys = change_key(plain_state)
 
     state_matrix = np.array(plain_state)
 
@@ -449,8 +440,6 @@ def encrypt(plaintext,masterkey):
     round_keys = change_key(masterkey)
     round_keys_temp = round_keys[:4]
     
-    
-    #invMatrix(round_keys_temp)
 
     state_matrix = xorBytes(state_matrix,round_keys_temp)
 
@@ -461,13 +450,11 @@ def encrypt(plaintext,masterkey):
             sub_bytes(state_matrix)
             shift_rows(state_matrix)
             mix_columns(state_matrix)
-            #invMatrix(matrixtemp)
             state_matrix = xorBytes(state_matrix,matrixtemp)
 
         else:
             sub_bytes(state_matrix)
             shift_rows(state_matrix)
-            #invMatrix(matrixtemp)
             state_matrix = xorBytes(state_matrix,matrixtemp)
     
     encryptedstring = bytematrix2string(state_matrix)
@@ -479,8 +466,6 @@ def encrypt(plaintext,masterkey):
     
 
 def decrypt(ciphertext,round_keys):
-
-    #ciphertext = np.array(ciphertext)
 
     ciphertext = xorBytes(ciphertext,round_keys[40:])
     for i in range(9, 0, -1):
