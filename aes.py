@@ -477,8 +477,6 @@ def decrypt(ciphertext,round_keys):
         ciphertext = xorBytes(ciphertext,matrixtemp)
         inv_mix_columns_com(ciphertext)
         
-        
-        
 
     matrixtemp = np.array(round_keys[:4])
     
