@@ -366,6 +366,16 @@ def order_change_key(round_keys):
 
     return round_keys
 
+def bytematrix2string(textmatrix):
+    finalstring = ""
+    tempstring=""
+    for j in range(len(textmatrix)):
+        for i in range(len(textmatrix)):
+           tempstring = textmatrix[i][j]
+           finalstring = finalstring + chr(tempstring)
+
+    return finalstring
+
 ### Key expansion finished ###
 def change_key(master_key):
     Nb = 4
@@ -389,9 +399,7 @@ def change_key(master_key):
     counter = 1
     
     i=0
-        
-
-    print("Round 0\n",round_keys)       
+             
     for col in range(4,4*11):
         if(col % 4 == 0):
 
@@ -408,7 +416,6 @@ def change_key(master_key):
             
             round_keys = np.append(round_keys,[tempcol],axis=0)
             
-            print("This is round: ", counter)
             for i in range(col-4,col):
                 count=0
                 for j in range(4):
@@ -423,11 +430,9 @@ def change_key(master_key):
                 
             round_keys = np.append(round_keys,[tempcol],axis=0)
 
-    print("Round Keys!\n",round_keys)
+    
 
     round_keys = order_change_key(round_keys)
-
-    print("Round Keys!\n",round_keys)
 
     return round_keys
   
@@ -436,62 +441,45 @@ def encrypt(plaintext,masterkey):
 
     plain_state = bytes2matrix(plaintext)
 
-    
-    printmatrix(plain_state)
     #round_keys = change_key(plain_state)
 
     state_matrix = np.array(plain_state)
 
-    
     invMatrix(state_matrix)
-    
-    print("First Matrix\n",state_matrix)
-
     round_keys = change_key(masterkey)
-
     round_keys_temp = round_keys[:4]
     
-    print("Round key temp\n",round_keys_temp)
     
     #invMatrix(round_keys_temp)
 
     state_matrix = xorBytes(state_matrix,round_keys_temp)
 
-    print("INPUT ROUNDS\n",state_matrix)
     for i in range(1,11):
 
         matrixtemp = np.array(round_keys[4 * i : 4 * (i + 1)])
         if i < 10:
             sub_bytes(state_matrix)
-            print("subs bytes: \n",state_matrix)
             shift_rows(state_matrix)
-            print("shifted rows: \n",state_matrix)
             mix_columns(state_matrix)
-            print("mixed columns: \n",state_matrix)
             #invMatrix(matrixtemp)
             state_matrix = xorBytes(state_matrix,matrixtemp)
-            print("Print Substates: \n",state_matrix)
-            print("ROUND: ",i)
-            print("Substitute matrix\n",state_matrix)
 
         else:
-            print("LAST ROUND: ",i)
             sub_bytes(state_matrix)
             shift_rows(state_matrix)
             #invMatrix(matrixtemp)
             state_matrix = xorBytes(state_matrix,matrixtemp)
-
-
-    print("Last state of the Matrix\n",state_matrix)
-    print("ROUND KEYS\n",round_keys)    
     
+    encryptedstring = bytematrix2string(state_matrix)
+    print("\nEncrypted message: ",encryptedstring)
+
     decrypt(state_matrix,round_keys)
-    ciphertext = matrix2array(state_matrix)
+    
+    
     
 
 def decrypt(ciphertext,round_keys):
 
-    print("\nDECRYPT ROUND KEEYSSS SHOOOOOW MEEEE", round_keys,"\n")
     #ciphertext = np.array(ciphertext)
 
     ciphertext = xorBytes(ciphertext,round_keys[40:])
@@ -499,17 +487,10 @@ def decrypt(ciphertext,round_keys):
 
         matrixtemp = np.array(round_keys[4 * i : 4 * (i + 1)])
 
-        print("\nBUCLE DECRYPT ROUND", i,"\n")
         inv_shift_rows(ciphertext)
-        print("after rows\n",ciphertext)
         inv_sub_bytes(ciphertext)
-        print("after sub_bytes\n",ciphertext)
-        print("Pre xor\n",ciphertext)
-        print("MAtrix temp :)",matrixtemp)
         ciphertext = xorBytes(ciphertext,matrixtemp)
-        print("After xor\n",ciphertext)
         inv_mix_columns_com(ciphertext)
-        print("after col\n",ciphertext)
         
         
         
@@ -518,16 +499,15 @@ def decrypt(ciphertext,round_keys):
     
     
     inv_shift_rows(ciphertext)
-    print("after rows\n",ciphertext)
     inv_sub_bytes(ciphertext)
-    print("after sub_bytes\n",ciphertext)
-    print(matrixtemp)
+    
     ciphertext = xorBytes(ciphertext,matrixtemp)
     
-    desencriptat = ciphertext
 
-    print("DECRYPTED\n",desencriptat)
-    desencriptat = desencriptat.astype('U13')
+    plaintext = bytematrix2string(ciphertext)
+
+    print("\nDecrypted message:",plaintext)
+
 
 
     
@@ -545,21 +525,15 @@ def decrypt(ciphertext,round_keys):
 key=""
 key= '{0:*>16}'.format(key)
 key="Thats my Kung Fu"
+print("This is the key: ",key)
 keyarray = bytes(key, 'ascii')
-print("size of key:",len(keyarray))
-print(str(keyarray.decode('ascii')))
-for i in range(len(keyarray)):
-    print(hex(keyarray[i]), end=' ')
-print("\n")
+
 string = "Two One Nine Two"
+print("\nThis is the message: ",string)
 array = bytes(string, 'ascii')
 length = len(array)
 string2 = b'hola que la pasa'
-print(length)
 
-for i in range(16):
-    print(hex(array[i]), end=' ')
-print("\n")
 
 matrix = array2matrix(array) 
 
@@ -567,26 +541,8 @@ matrix = array2matrix(array)
 
 #print("TEXT to Matrix: ",text2matrix(string))
 
-shift_rows(matrix)
-print("\n")
-print("\n")
-print("\n")
-printmatrix(matrix)
-print("\n")
-print("\n")
-print("\n")
-mix_columns(matrix)
-printmatrix(matrix)
-print("\n")
-print("\n")
-print("\n")
-sub_bytes(matrix)
-printmatrix(matrix)
-print("\n")
-print("\n")
-print("\n")
+
 plain = 0x3243f6a8885a308d313198a2e0370734
-print("text to matrix:",text2matrix(plain))
 change_key(keyarray)
 #sprintmatrix(matrix)
 encrypt(array, keyarray)
